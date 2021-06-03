@@ -1,0 +1,37 @@
+name: CI
+
+on: push
+
+jobs:
+  build:
+    name: "Build and Release"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+
+      - name: Install requierments.txt
+        run: |
+          pip3 install -r ./requirements.txt
+          pip3 install pytest pytest-cov
+      - name: Run tests
+        run: |
+          pytest
+          pytest --cov .
+      - name: Setup Node
+        uses: actions/setup-node@v1
+      - name: Install serverless
+        run: npm install -g serverless serverless-python-requirements
+      - name: Deploy QA
+        if: github.ref == 'refs/heads/qa'
+        run: serverless deploy -s qa
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Deploy Production
+        if: github.ref == 'refs/heads/master'
+        run: serverless deploy -s prod
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

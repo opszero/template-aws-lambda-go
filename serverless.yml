@@ -1,0 +1,74 @@
+service: "" # <name> of the service
+provider:
+  name: aws
+  ecr:
+    images:
+      opszero:
+        path: ./
+  stage: prod
+  region: us-west-2
+  # iamRoleStatements:
+  #   - Effect: "Allow"
+  #     Action:
+  #     - dynamodb:*
+  #     Resource:
+  #       Fn::GetAtt:
+  #         - sourcing
+  #         - Arn
+  #   - Effect: "Allow"
+  #     Action:
+  #     - s3:*
+  #     Resource:
+  #       Fn::Join:
+  #         - ""
+  #         - - "arn:aws:s3:::"
+  #           - "Ref" : "setupname"
+  #           - '/*'
+
+functions:
+  flywheel:
+    image:
+      name: opszero
+    timeout: 30
+    memorySize: 512
+    events:
+      - httpApi:
+          method: GET
+          path: /
+  handler:
+    image:
+      name: opszero
+    timeout: 300
+    memorySize: 512
+    events:
+    - schedule: cron(0/15 18-21 ? * * *)
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+
+# resources:
+#   Resources:
+#     tableName:
+#       Type: AWS::DynamoDB::Table
+#       Properties:
+#         TableName: name
+#         AttributeDefinitions:
+#           - AttributeName: link
+#             AttributeType: S
+#         KeySchema:
+#           - AttributeName: link
+#             KeyType: HASH
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 3
+#           WriteCapacityUnits: 3
+#     s3bucket:
+#       Type: AWS::S3::Bucket
+#       Properties:
+#         BucketName: setupname
+#         AccessControl: PublicRead
+#         WebsiteConfiguration:
+#           IndexDocument: index.html
