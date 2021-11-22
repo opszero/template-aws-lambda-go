@@ -1,19 +1,23 @@
-service: "" # <name> of the service
+service: "aws-lambda-go" # <name> of the service
 provider:
   name: aws
-  ecr:
-    images:
-      opszero:
-        path: ./
+  profile: opszero
+  runtime: go1.x
   stage: prod
   region: us-west-2
+  deploymentBucket:
+    name: infra.opszero.com
+  environment:
+    DYNAMODB_TABLE_NAME: ${self:service}-${sls:stage}
+  httpApi:
+    cors: true
   # iamRoleStatements:
   #   - Effect: "Allow"
   #     Action:
   #     - dynamodb:*
   #     Resource:
   #       Fn::GetAtt:
-  #         - sourcing
+  #         - oneTable
   #         - Arn
   #   - Effect: "Allow"
   #     Action:
@@ -27,44 +31,40 @@ provider:
 
 functions:
   flywheel:
-    image:
-      name: opszero
-    timeout: 30
+    handler: ./bootstrap
+    timeout: 29
     memorySize: 512
     events:
-      - httpApi:
-          method: GET
-          path: /
-  handler:
-    image:
-      name: opszero
-    timeout: 300
-    memorySize: 512
-    events:
-    - schedule: cron(0/15 18-21 ? * * *)
+      - httpApi: '*'
+  # handler:
+  #   timeout: 300
+  #   memorySize: 512
+  #   events:
+  #   - schedule: cron(0/15 18-21 ? * * *)
 
-plugins:
-  - serverless-python-requirements
-
-custom:
-  pythonRequirements:
-    dockerizePip: true
+package:
+  patterns:
+    - '!node_modules/**'
 
 # resources:
 #   Resources:
-#     tableName:
+#     oneTable:
 #       Type: AWS::DynamoDB::Table
 #       Properties:
-#         TableName: name
+#         TableName: ${self:service}-${sls:stage}
 #         AttributeDefinitions:
-#           - AttributeName: link
+#           - AttributeName: pk
+#             AttributeType: S
+#           - AttributeName: sk
 #             AttributeType: S
 #         KeySchema:
-#           - AttributeName: link
+#           - AttributeName: pk
 #             KeyType: HASH
+#           - AttributeName: sk
+#             KeyType: RANGE
 #         ProvisionedThroughput:
-#           ReadCapacityUnits: 3
-#           WriteCapacityUnits: 3
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
 #     s3bucket:
 #       Type: AWS::S3::Bucket
 #       Properties:

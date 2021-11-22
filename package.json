@@ -4,12 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "release": "make && serverless deploy"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "serverless": "^2.44.0",
-    "serverless-python-requirements": "^5.1.1"
+    "serverless": "^2.66.2"
   }
 }
