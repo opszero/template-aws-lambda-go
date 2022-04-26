@@ -5,6 +5,7 @@ provider:
   runtime: go1.x
   stage: prod
   region: us-west-2
+  memorySize: 128
   deploymentBucket:
     name: infra.opszero.com
   environment:
